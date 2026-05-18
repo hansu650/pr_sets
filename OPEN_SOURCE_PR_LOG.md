@@ -882,8 +882,11 @@ the reported failure no longer occurs.
 - Repository: `pypa/pip-audit`
 - Issue: https://github.com/pypa/pip-audit/issues/1030
 - PR: Not opened yet
-- Status: Local patch ready; awaiting human review before commit/push/PR
+- Status: Branch pushed to fork; awaiting PR creation
 - Branch: `fix/pip-source-python-location`
+- Commit: `2a11d40 Use PIPAPI_PYTHON_LOCATION when fixing dependencies`
+- Fork branch:
+  https://github.com/hansu650/pip-audit/tree/fix/pip-source-python-location
 - Local path: `D:\daima\cursor\opensource\pip-audit-1030`
 - Isolated environment: `pip_audit_1030`
 - Date checked: 2026-05-18
@@ -951,10 +954,14 @@ Note:
 
 ### Next Action
 
-Review the final diff manually. If accepted, commit with:
+Open the PR using:
+
+```text
+https://github.com/pypa/pip-audit/compare/main...hansu650:pip-audit:fix/pip-source-python-location
+```
+
+Use the title:
 
 ```text
 Use PIPAPI_PYTHON_LOCATION when fixing dependencies
 ```
-
-Then push to the fork and open a focused PR to `pypa/pip-audit`.
