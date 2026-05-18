@@ -876,3 +876,85 @@ issue behavior.
 Always reproduce on current `main` before implementing, even when an issue is
 open and labeled `help wanted`. A stale open issue is still a stop condition if
 the reported failure no longer occurs.
+
+## PR 11 Candidate: pip-audit `PIPAPI_PYTHON_LOCATION` during fixes
+
+- Repository: `pypa/pip-audit`
+- Issue: https://github.com/pypa/pip-audit/issues/1030
+- PR: Not opened yet
+- Status: Local patch ready; awaiting human review before commit/push/PR
+- Branch: `fix/pip-source-python-location`
+- Local path: `D:\daima\cursor\opensource\pip-audit-1030`
+- Isolated environment: `pip_audit_1030`
+- Date checked: 2026-05-18
+
+### Screening Result
+
+- Issue `#1030` was open with `bug-candidate` label.
+- No assignee was shown.
+- The issue had no linked branches or pull requests.
+- Searches for open PRs mentioning `#1030`, `PIPAPI_PYTHON_LOCATION`, or
+  `PipSource.fix` found no active duplicate.
+- `CONTRIBUTING.md` says public or CLI behavior changes should update
+  `CHANGELOG.md` under `Unreleased`.
+- Fresh clone was clean before editing.
+
+### Reproduction
+
+A regression test was added first and failed on current `main`.
+
+The failing behavior was that `PipSource.fix()` still built its install command
+with `sys.executable`, even when `PIPAPI_PYTHON_LOCATION` was set. This matched
+the issue report.
+
+### Local Patch
+
+Modified files:
+
+- `pip_audit/_dependency_source/pip.py`
+- `test/dependency_source/test_pip.py`
+- `CHANGELOG.md`
+
+Change summary:
+
+- `PipSource.fix()` now uses `PIPAPI_PYTHON_LOCATION` when it is set, falling
+  back to `sys.executable`.
+- Added a regression test that patches `subprocess.run` and checks the generated
+  `pip install` command uses the configured Python location.
+- Added a short `Unreleased / Fixed` changelog entry.
+
+### Validation
+
+Observed results:
+
+```text
+python -m pytest test/dependency_source/test_pip.py -k "fix"
+3 passed, 6 deselected
+
+python -m pytest test/dependency_source/test_pip.py
+9 passed
+
+python -m ruff check pip_audit/_dependency_source/pip.py test/dependency_source/test_pip.py
+All checks passed!
+
+git diff --check
+passed
+```
+
+Note:
+
+- The test run emitted a dependency warning from `pip_api` importing Python's
+  deprecated `sre_constants` module under Python 3.12. This was not introduced
+  by the patch.
+- The initial Windows line-ending state was normalized to LF before final
+  validation.
+
+### Next Action
+
+Review the final diff manually. If accepted, commit with:
+
+```text
+Use PIPAPI_PYTHON_LOCATION when fixing dependencies
+```
+
+Then push to the fork and open a focused PR to `pypa/pip-audit`.
