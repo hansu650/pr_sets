@@ -1069,3 +1069,108 @@ Additional checks:
 
 Ask on issue `#226` whether maintainers want a code fix or documentation-only
 guidance before opening a PR.
+
+## PR 13 Candidate: pip-audit skip editable before hash validation
+
+- Repository: `pypa/pip-audit`
+- Issue: https://github.com/pypa/pip-audit/issues/1024
+- PR: Not opened
+- Status: Local proof prepared; do not push/open without review
+- Branch: `fix/skip-editable-hashes`
+- Local path: `D:\daima\cursor\opensource\pip-audit-1024`
+- Isolated environment: `pip_audit_1024`
+- Date checked: 2026-05-18
+
+### Screening Result
+
+- Issue `#1024` was open with `bug-candidate` label.
+- No assignee was shown.
+- The issue had no linked branches or pull requests.
+- Searches for open PRs mentioning `#1024`, `skip-editable`, or hash
+  validation found no active duplicate.
+- The issue has a maintainer comment saying they would take a look and noting
+  that `uv audit` may be relevant for uv-based workflows. This is not a
+  rejection, but it means a PR should stay narrow.
+- `pip-audit #1036` remained open, with no review comments and no failed checks;
+  no need to pause for it.
+
+### Reproduction
+
+A regression test was added first and failed on current `main`.
+
+Observed failure:
+
+```text
+RequirementSourceError: requirement --editable file:flask.py#egg=flask==2.0.1 does not contain a hash
+```
+
+This matched the issue: when one requirement in a file has a hash, hash mode is
+inferred before editable requirements are skipped.
+
+### Local Patch
+
+Modified files:
+
+- `pip_audit/_dependency_source/requirement.py`
+- `test/dependency_source/test_requirement.py`
+
+Change summary:
+
+- In `_collect_preresolved_deps()`, `skip_editable` handling now runs before
+  hash validation.
+- Skipped editable requirements now `continue` immediately, so they do not
+  proceed into URL, marker, duplicate, or pinning logic.
+- Added a regression test with an editable requirement lacking a hash and a
+  normal pinned requirement with a hash in the same file.
+
+### Validation
+
+Observed results:
+
+```text
+python -m pytest test/dependency_source/test_requirement.py -k "editable and hash"
+1 passed, 45 deselected
+
+python -m pytest test/dependency_source/test_requirement.py -k "skip_editable_before_hash_validation or disable_pip_editable_skip or disable_pip_incomplete_hashes or require_hashes_inferred" --skip-online
+4 passed, 42 deselected
+
+python -m ruff check pip_audit/_dependency_source/requirement.py test/dependency_source/test_requirement.py
+All checks passed!
+
+git diff --check
+passed
+```
+
+Additional checks:
+
+- Scanned modified files for hidden/bidi/control characters: none found.
+- Normalized modified files to LF.
+- Running the entire `test/dependency_source/test_requirement.py` file timed out
+  on Windows, even with `--skip-online`, because the file contains heavier
+  dependency-resolution paths outside this patch's scope. The focused
+  hash/editable/disable-pip subset was used as the local proof boundary.
+
+### PR Draft
+
+Title:
+
+```text
+Skip editable requirements before hash validation
+```
+
+Body:
+
+```markdown
+Fixes #1024.
+
+This skips editable requirements before enforcing hash validation when
+`--skip-editable` is enabled.
+
+Non-editable requirements still keep the existing hash validation behavior.
+
+Tests:
+- `python -m pytest test/dependency_source/test_requirement.py -k "editable and hash"`
+- `python -m pytest test/dependency_source/test_requirement.py -k "skip_editable_before_hash_validation or disable_pip_editable_skip or disable_pip_incomplete_hashes or require_hashes_inferred" --skip-online`
+- `python -m ruff check pip_audit/_dependency_source/requirement.py test/dependency_source/test_requirement.py`
+- `git diff --check`
+```
