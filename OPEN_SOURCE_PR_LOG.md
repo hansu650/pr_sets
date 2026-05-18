@@ -818,3 +818,61 @@ failed to encode 'tests/roots/test-root/wrongenc.inc' from UTF-8 to iso-8859
   warnings, or platform-specific fixture conversion errors, do not submit from
   that local checkout. Pick a repository whose local clone is clean before any
   code changes.
+
+## PR 10 Candidate: pipx `inject` option order parsing
+
+- Repository: `pypa/pipx`
+- Issue: https://github.com/pypa/pipx/issues/1444
+- PR: Not opened
+- Status: Stopped before editing; current `main` no longer reproduces the issue
+- Branch attempted locally: `fix/inject-option-order`
+- Local path: `D:\daima\cursor\opensource\pipx-1444` (removed after stop)
+- Isolated environment: `pipx_1444` (removed after stop)
+- Date checked: 2026-05-18
+
+### Screening Result
+
+This looked like a good candidate on paper:
+
+- issue open with `bug` and `help wanted` labels;
+- no assignee;
+- no linked development branch or PR visible;
+- no obvious open PR found for `#1444`;
+- contribution docs were standard and required a changelog fragment;
+- clone was clean with no encoding or hidden Unicode warnings.
+
+### Stop Condition
+
+Current `main` already parses both forms successfully:
+
+```text
+pipx inject ansible-core ansible --force
+pipx inject ansible-core --force ansible
+```
+
+Parser-level reproduction showed both commands produce:
+
+```text
+package: ansible-core
+dependencies: ['ansible']
+force: True
+```
+
+Running the real CLI for the issue command did not fail with
+`unrecognized arguments`; it reached command execution and failed only because
+the target venv was not installed:
+
+```text
+Can't inject 'ansible' into nonexistent Virtual Environment 'ansible-core'.
+```
+
+### Decision
+
+No patch was made. Opening a PR would risk submitting a no-op fix for stale
+issue behavior.
+
+### Lesson
+
+Always reproduce on current `main` before implementing, even when an issue is
+open and labeled `help wanted`. A stale open issue is still a stop condition if
+the reported failure no longer occurs.
