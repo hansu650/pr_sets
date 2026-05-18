@@ -965,3 +965,107 @@ Use the title:
 ```text
 Use PIPAPI_PYTHON_LOCATION when fixing dependencies
 ```
+
+## PR 12 Candidate: pyproject-hooks thread-local subprocess runner
+
+- Repository: `pypa/pyproject-hooks`
+- Issue: https://github.com/pypa/pyproject-hooks/issues/226
+- PR: Not opened
+- Status: Local proof prepared; do not open PR before maintainer preference is clear
+- Branch: `fix/thread-local-subprocess-runner`
+- Local path: `D:\daima\cursor\opensource\pyproject-hooks-226`
+- Isolated environment: `pyproject_hooks_226`
+- Date checked: 2026-05-18
+
+### Screening Result
+
+- Issue `#226` was open.
+- No assignee was shown.
+- Searches for open PRs mentioning `#226`, `subprocess_runner`,
+  `thread-safe`, or `ContextVar` found no active duplicate.
+- Test setup is light: `dev-requirements.txt` installs `pytest`, `flake8`,
+  `testpath`, and `setuptools`; `noxfile.py` runs pytest for tests.
+- No explicit AI policy was found.
+
+### Maintainer Signal
+
+Important caution:
+
+- A maintainer comment suggested that `BuildBackendHookCaller` objects are cheap,
+  and that documenting one instance per thread may be preferable to adding
+  thread-local behavior.
+
+Decision:
+
+- Prepare and validate a local proof, but do not open a PR without first asking
+  whether maintainers prefer a code change or documentation note.
+
+Suggested issue comment:
+
+```text
+I checked this locally and can reproduce the cross-thread runner leak with a
+small regression test. I also have a minimal ContextVar-based patch that keeps
+the temporary runner scoped to the current context while preserving the default
+runner on the shared caller.
+
+Before opening a PR, would you prefer a code fix for this behavior, or would you
+rather document that callers should use a separate BuildBackendHookCaller per
+thread?
+```
+
+### Reproduction
+
+A regression test was added first and failed on current `main`:
+
+```text
+assert calls == ["default", "scoped"]
+E AssertionError: assert ['scoped', 'scoped'] == ['default', 'scoped']
+```
+
+This shows that a subprocess runner override active in one thread can affect a
+concurrent call in another thread using the same `BuildBackendHookCaller`.
+
+### Local Patch
+
+Modified files:
+
+- `src/pyproject_hooks/_impl.py`
+- `tests/test_call_hooks.py`
+
+Change summary:
+
+- Added a `ContextVar` for the temporary subprocess runner override.
+- Kept `self._subprocess_runner` as the default runner.
+- `subprocess_runner()` now sets/resets the context-local override token.
+- `_call_hook()` uses the context-local override when present, otherwise the
+  default runner.
+- Added a deterministic threading regression test using `threading.Event`, not
+  sleeps.
+
+### Validation
+
+Observed results:
+
+```text
+python -m pytest tests/test_call_hooks.py -k "runner or subprocess_runner"
+2 passed, 18 deselected
+
+python -m pytest tests/test_call_hooks.py
+20 passed
+
+git diff --check
+passed
+```
+
+Additional checks:
+
+- Scanned modified files for hidden/bidi/control characters: none found.
+- Normalized modified files to LF.
+- `python -m flake8 src tests` was attempted but current `main` has existing
+  flake8 failures across unchanged files, including E501 and F401. Do not treat
+  that full-repo command as a clean validation baseline for this patch.
+
+### Next Action
+
+Ask on issue `#226` whether maintainers want a code fix or documentation-only
+guidance before opening a PR.
