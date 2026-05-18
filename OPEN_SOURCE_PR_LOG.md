@@ -1074,9 +1074,12 @@ guidance before opening a PR.
 
 - Repository: `pypa/pip-audit`
 - Issue: https://github.com/pypa/pip-audit/issues/1024
-- PR: Not opened
-- Status: Local proof prepared; do not push/open without review
+- PR: Not opened yet
+- Status: Branch pushed to fork; awaiting PR creation
 - Branch: `fix/skip-editable-hashes`
+- Commit: `9b12082 Skip editable requirements before hash validation`
+- Fork branch:
+  https://github.com/hansu650/pip-audit/tree/fix/skip-editable-hashes
 - Local path: `D:\daima\cursor\opensource\pip-audit-1024`
 - Isolated environment: `pip_audit_1024`
 - Date checked: 2026-05-18
@@ -1113,6 +1116,7 @@ Modified files:
 
 - `pip_audit/_dependency_source/requirement.py`
 - `test/dependency_source/test_requirement.py`
+- `CHANGELOG.md`
 
 Change summary:
 
@@ -1149,6 +1153,14 @@ Additional checks:
   on Windows, even with `--skip-online`, because the file contains heavier
   dependency-resolution paths outside this patch's scope. The focused
   hash/editable/disable-pip subset was used as the local proof boundary.
+
+### Next Action
+
+Open the PR using:
+
+```text
+https://github.com/pypa/pip-audit/compare/main...hansu650:pip-audit:fix/skip-editable-hashes
+```
 
 ### PR Draft
 
