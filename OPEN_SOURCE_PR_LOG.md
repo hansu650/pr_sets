@@ -881,15 +881,15 @@ the reported failure no longer occurs.
 
 - Repository: `pypa/pip-audit`
 - Issue: https://github.com/pypa/pip-audit/issues/1030
-- PR: Not opened yet
-- Status: Branch pushed to fork; awaiting PR creation
+- PR: https://github.com/pypa/pip-audit/pull/1036
+- Status: Open; approved by maintainer; blocked by unrelated upstream CI failure
 - Branch: `fix/pip-source-python-location`
 - Commit: `2a11d40 Use PIPAPI_PYTHON_LOCATION when fixing dependencies`
 - Fork branch:
   https://github.com/hansu650/pip-audit/tree/fix/pip-source-python-location
 - Local path: `D:\daima\cursor\opensource\pip-audit-1030`
 - Isolated environment: `pip_audit_1030`
-- Date checked: 2026-05-18
+- Date checked: 2026-05-19
 
 ### Screening Result
 
@@ -952,19 +952,35 @@ Note:
 - The initial Windows line-ending state was normalized to LF before final
   validation.
 
-### Next Action
+### PR Status Update
 
-Open the PR using:
+- PR opened: https://github.com/pypa/pip-audit/pull/1036
+- Maintainer `woodruffw` approved the PR with: "Thank you @hansu650, this
+  seems right to me."
+- CI failed in `test_requirement_source_require_hashes_unpinned`, which is
+  outside the PR's changed files.
+- The same test was also failing on current upstream `main`, so this was
+  treated as an unrelated upstream failure rather than something to fix inside
+  this PR.
+- A short PR comment was posted explaining that the PR would be left unchanged
+  to avoid mixing in an unrelated requirement-source fix:
+  https://github.com/pypa/pip-audit/pull/1036#issuecomment-4486142454
+
+Relevant CI evidence:
 
 ```text
-https://github.com/pypa/pip-audit/compare/main...hansu650:pip-audit:fix/pip-source-python-location
+PR CI run:
+https://github.com/pypa/pip-audit/actions/runs/26015682749
+
+Failing test:
+test/dependency_source/test_requirement.py::test_requirement_source_require_hashes_unpinned
+
+Upstream main CI also failed on the same test:
+https://github.com/pypa/pip-audit/actions/runs/26036592893
 ```
 
-Use the title:
-
-```text
-Use PIPAPI_PYTHON_LOCATION when fixing dependencies
-```
+Next action: do not push or rebase unless maintainers ask for it or upstream
+`main` becomes green and the PR needs a rerun/update.
 
 ## PR 12 Candidate: pyproject-hooks thread-local subprocess runner
 
@@ -1074,15 +1090,15 @@ guidance before opening a PR.
 
 - Repository: `pypa/pip-audit`
 - Issue: https://github.com/pypa/pip-audit/issues/1024
-- PR: Not opened yet
-- Status: Branch pushed to fork; awaiting PR creation
+- PR: https://github.com/pypa/pip-audit/pull/1037
+- Status: Open; waiting for maintainer review / workflow approval
 - Branch: `fix/skip-editable-hashes`
 - Commit: `9b12082 Skip editable requirements before hash validation`
 - Fork branch:
   https://github.com/hansu650/pip-audit/tree/fix/skip-editable-hashes
 - Local path: `D:\daima\cursor\opensource\pip-audit-1024`
 - Isolated environment: `pip_audit_1024`
-- Date checked: 2026-05-18
+- Date checked: 2026-05-19
 
 ### Screening Result
 
@@ -1094,8 +1110,9 @@ guidance before opening a PR.
 - The issue has a maintainer comment saying they would take a look and noting
   that `uv audit` may be relevant for uv-based workflows. This is not a
   rejection, but it means a PR should stay narrow.
-- `pip-audit #1036` remained open, with no review comments and no failed checks;
-  no need to pause for it.
+- `pip-audit #1036` remained open and was later approved by maintainer
+  `woodruffw`; its CI failure matched an unrelated upstream `main` failure, so
+  this PR did not need to pause for #1036.
 
 ### Reproduction
 
