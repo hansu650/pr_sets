@@ -1086,6 +1086,22 @@ Additional checks:
 Ask on issue `#226` whether maintainers want a code fix or documentation-only
 guidance before opening a PR.
 
+### Status Update - 2026-05-19
+
+- Maintainer reply:
+  https://github.com/pypa/pyproject-hooks/issues/226#issuecomment-4486882059
+- Outcome: abandoned as a code PR target.
+- Reason: maintainer prefers documenting the limitation for now instead of
+  adding a ContextVar/thread-local workaround around mutable runner state.
+- If a code fix is ever needed later, maintainer suggested a more explicit API
+  shape, such as returning a modified hook caller copy with a custom runner,
+  rather than adding hidden context-local behavior.
+- Existing local ContextVar patch remains local learning/proof material only.
+  Do not push it or open a PR from `fix/thread-local-subprocess-runner`.
+- Possible future path: a small documentation-only PR could be considered, but
+  it should start from a fresh `upstream/main` branch and must not include the
+  local code patch.
+
 ## PR 13 Candidate: pip-audit skip editable before hash validation
 
 - Repository: `pypa/pip-audit`
