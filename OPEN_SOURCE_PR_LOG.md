@@ -1203,3 +1203,110 @@ Tests:
 - `python -m ruff check pip_audit/_dependency_source/requirement.py test/dependency_source/test_requirement.py`
 - `git diff --check`
 ```
+
+## PR 14: installer normalize RECORD paths when writing
+
+- Repository: `pypa/installer`
+- Issue: https://github.com/pypa/installer/issues/158
+- PR: https://github.com/pypa/installer/pull/335
+- Status: Open; all checks passed, waiting for maintainer review
+- Branch: `fix/normalize-record-paths`
+- Commit: `0464764 Normalize RECORD paths when writing`
+- Fork branch:
+  https://github.com/hansu650/installer/tree/fix/normalize-record-paths
+- Local path: `D:\daima\cursor\opensource\installer-158`
+- Isolated environment: `installer_158`
+- Date checked: 2026-05-19
+
+### Screening Result
+
+- Issue `#158` was open.
+- No assignee was shown.
+- The issue had no linked branches or pull requests.
+- Searches for open PRs mentioning `#158`, `RecordEntry.to_row`, forward-slash
+  normalization, or RECORD path normalization found no active duplicate.
+- Open PRs `#327` and `#328` mention RECORD-related install behavior, but they
+  do not modify `src/installer/records.py` or address `RecordEntry.to_row()`.
+- Maintainer comment suggested using `PureWindowsPath(...).as_posix()` for
+  normalization, so the implementation followed that direction.
+
+### Reproduction
+
+Because the local machine is Windows, current `main` already normalizes
+backslashes in normal execution through the old `os.sep == "\\"` branch. To
+prove the cross-platform failure locally, the reproduction simulated a
+non-Windows platform by setting `installer.records.os.sep = "/"` before calling
+`RecordEntry.to_row()`.
+
+Observed failing behavior on current `main`:
+
+```text
+row ('distribution-1.0.dist-info\\RECORD', '', '')
+AssertionError
+```
+
+Expected row:
+
+```text
+('distribution-1.0.dist-info/RECORD', '', '')
+```
+
+### Local Patch
+
+Modified files:
+
+- `src/installer/records.py`
+- `tests/test_records.py`
+
+Change summary:
+
+- `RecordEntry.to_row()` now normalizes the output path with
+  `PureWindowsPath(path).as_posix()` instead of only replacing backslashes when
+  the current platform separator is `\`.
+- Added regression coverage for Windows-style RECORD paths without a prefix.
+- Added regression coverage for Windows-style RECORD paths with a `path_prefix`.
+
+### Validation
+
+Observed results:
+
+```text
+python -m pytest tests/test_records.py -k "backslash_path or string_representation"
+21 passed, 44 deselected
+
+python -m pytest tests/test_records.py
+65 passed
+
+python -m pytest --cov=installer --cov-fail-under=100 --cov-report=term-missing --cov-context=test -n auto tests
+152 passed
+Required test coverage of 100% reached. Total coverage: 100.00%
+
+python -m ruff check src/installer/records.py tests/test_records.py
+All checks passed!
+
+python -m ruff format --check src/installer/records.py tests/test_records.py
+2 files already formatted
+
+python -m pre_commit run --files src/installer/records.py tests/test_records.py
+all hooks passed
+
+git diff --check
+passed
+```
+
+### PR Status
+
+PR opened:
+
+```text
+https://github.com/pypa/installer/pull/335
+```
+
+Status after opening:
+
+- GitHub Actions test matrix: success on Ubuntu, Windows, macOS, and PyPy
+- `docs/readthedocs.org:installer`: success
+- `pre-commit.ci - pr`: success
+
+Next action: monitor CI and respond only if a failing check is related to the
+two touched files.
