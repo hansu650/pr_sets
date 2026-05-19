@@ -1409,3 +1409,138 @@ Next action:
 
 - Ask Pro for a replacement target that explicitly includes a maintainer-comment
   review step before recommending implementation.
+
+## PR 16 Local Proof: installer data_dir build tag
+
+- Repository: `pypa/installer`
+- Issue: https://github.com/pypa/installer/issues/193
+- PR: Not opened
+- Status: local proof completed; not pushed because `installer #335` is still open
+- Branch: `fix/data-dir-build-tag`
+- Local path: `D:\daima\cursor\opensource\installer-193`
+- Isolated environment: `installer_193`
+- Local commit: `dc0eee7 Include build tag in wheel data directory`
+- Date checked: 2026-05-19
+
+### Screening Result
+
+- Issue `#193` is open.
+- Labels: `type: bug`, `component: destinations`.
+- No assignee is shown.
+- No linked branch or pull request was found.
+- Open PR searches for `#193`, `data_dir`, and `build tag` found no active
+  duplicate.
+- Maintainer/collaborator signal: no maintainer comment rejected the direction;
+  the issue remains labeled as a bug.
+
+### Reproduction
+
+Added a focused regression test for a wheel filename containing an optional
+build tag:
+
+```text
+fancy-1.0.0-1337-py2.py3-none-any.whl
+```
+
+Current `main` failed as expected:
+
+```text
+assert 'fancy-1.0.0.data' == 'fancy-1.0.0-1337.data'
+```
+
+This proves that `WheelFile.data_dir` ignored the wheel filename build tag.
+
+### Local Patch
+
+Modified files:
+
+- `src/installer/sources.py`
+- `tests/test_sources.py`
+- `tests/test_core.py`
+
+Change summary:
+
+- Added an optional `build_tag` attribute to `WheelSource`.
+- `WheelSource.data_dir` now includes the optional build tag when present.
+- `WheelFile` now passes `parsed_name.build_tag` from `parse_wheel_filename()`
+  into `WheelSource`.
+- Added a `WheelFile` regression test for the computed `.data` directory.
+- Added an install-path regression test proving that a build-tagged
+  `.data/data/...` entry is installed into the `data` scheme, not root scheme.
+
+### Validation
+
+Observed results:
+
+```text
+python -m pytest tests/test_sources.py -k "build_tag or data_dir"
+1 passed, 19 deselected
+
+python -m pytest tests/test_core.py -k "build_tag or data_dir"
+1 passed, 9 deselected
+
+python -m pytest tests/test_sources.py
+20 passed
+
+python -m pytest tests/test_core.py
+10 passed
+
+python -m pytest --cov=installer --cov-fail-under=100 --cov-report=term-missing --cov-context=test -n auto tests
+152 passed
+Required test coverage of 100% reached. Total coverage: 100.00%
+
+python -m ruff check src/installer/sources.py tests/test_sources.py tests/test_core.py
+All checks passed!
+
+python -m ruff format --check src/installer/sources.py tests/test_sources.py tests/test_core.py
+3 files already formatted
+
+python -m pre_commit run --files src/installer/sources.py tests/test_sources.py tests/test_core.py
+all hooks passed
+
+git diff --check
+passed
+```
+
+Additional checks:
+
+- Scanned modified files for hidden/bidi/control characters: none found.
+- Removed generated `.coverage`, `.pytest_cache`, `.ruff_cache`, `.mypy_cache`,
+  and `__pycache__` artifacts.
+- Worktree is clean after local commit.
+
+### PR Draft
+
+```markdown
+Fixes #193.
+
+This includes the optional wheel build tag when computing the `.data` directory
+name.
+
+For a wheel such as `fancy-1.0.0-1337-py2.py3-none-any.whl`, the data directory
+is now treated as `fancy-1.0.0-1337.data` instead of `fancy-1.0.0.data`.
+
+The regression coverage checks both the computed `WheelFile.data_dir` and that a
+build-tagged `.data/data/...` entry is installed into the `data` scheme.
+
+Tests:
+
+```text
+python -m pytest tests/test_sources.py -k "build_tag or data_dir"
+python -m pytest tests/test_core.py -k "build_tag or data_dir"
+python -m pytest tests/test_sources.py
+python -m pytest tests/test_core.py
+python -m pytest --cov=installer --cov-fail-under=100 --cov-report=term-missing --cov-context=test -n auto tests
+python -m ruff check src/installer/sources.py tests/test_sources.py tests/test_core.py
+python -m ruff format --check src/installer/sources.py tests/test_sources.py tests/test_core.py
+python -m pre_commit run --files src/installer/sources.py tests/test_sources.py tests/test_core.py
+git diff --check
+```
+```
+
+### Next Action
+
+- Do not push/open immediately while `pypa/installer #335` is still awaiting
+  review.
+- If `#335` merges or receives no objection after a reasonable wait, this local
+  branch is ready to push and open as a second, independent installer PR.
