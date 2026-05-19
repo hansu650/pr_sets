@@ -1361,3 +1361,51 @@ Notification cleanup:
 - Current GitHub notification threads were marked done after triage.
 - `gh api notifications?all=false` returned no unread notifications after
   cleanup.
+
+## PR 15 Candidate Rejected: markdown-it-py table parsing
+
+- Repository: `executablebooks/markdown-it-py`
+- Issue: https://github.com/executablebooks/markdown-it-py/issues/376
+- PR: Not opened
+- Status: rejected before local proof
+- Date checked: 2026-05-19
+
+### Screening Result
+
+- Issue `#376` is open and labeled `bug`.
+- No assignee is shown.
+- The issue includes a small reproduction for table parsing behavior.
+
+### Maintainer Signal
+
+Critical maintainer comment:
+
+```text
+This is consistent with the output of https://markdown-it.github.io,
+so it is best if you raise this in https://github.com/markdown-it/markdown-it
+first
+```
+
+Source:
+
+```text
+https://github.com/executablebooks/markdown-it-py/issues/376#issuecomment-3656289151
+```
+
+### Decision
+
+Do not implement or open a PR for this target.
+
+Reason:
+
+- The maintainer already indicated that the behavior matches upstream
+  `markdown-it`.
+- A direct markdown-it-py patch would likely be rejected unless the upstream
+  JavaScript project first changes or accepts the behavior.
+- This matches a previous failure pattern: technically plausible patch, but
+  maintainer direction is not aligned.
+
+Next action:
+
+- Ask Pro for a replacement target that explicitly includes a maintainer-comment
+  review step before recommending implementation.
