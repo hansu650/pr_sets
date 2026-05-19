@@ -1326,3 +1326,38 @@ Status after opening:
 
 Next action: monitor CI and respond only if a failing check is related to the
 two touched files.
+
+## Notification Triage - 2026-05-19
+
+GitHub notifications were reviewed through `gh api notifications`.
+
+Processed notifications:
+
+- `pypa/pip-audit #1036`
+  https://github.com/pypa/pip-audit/pull/1036
+  - Status: open, maintainer approved.
+  - Current blocker: CI failure appears unrelated to the PR and also present on
+    upstream `main`.
+  - Action taken earlier: left a short comment explaining that the PR will stay
+    unchanged to avoid mixing in an unrelated requirement-source fix.
+  - Next action: wait for upstream CI/main to recover or maintainer guidance.
+- `pypa/pip-audit #1037`
+  https://github.com/pypa/pip-audit/pull/1037
+  - Status: open, review/checks still pending.
+  - Next action: wait; do not stack more changes onto this PR.
+- `pypa/installer #335`
+  https://github.com/pypa/installer/pull/335
+  - Status: open, all visible checks passed.
+  - Next action: wait for maintainer review.
+- `pypa/pyproject-hooks #226`
+  https://github.com/pypa/pyproject-hooks/issues/226#issuecomment-4486882059
+  - Status: maintainer prefers documentation for now.
+  - Next action: do not open the local ContextVar code PR.
+- Old closed/abandoned PR notifications for Sphinx, pre-commit, marshmallow,
+  IPython, xarray, SciPy, and Matplotlib were reviewed and require no action.
+
+Notification cleanup:
+
+- Current GitHub notification threads were marked done after triage.
+- `gh api notifications?all=false` returned no unread notifications after
+  cleanup.
