@@ -1544,3 +1544,125 @@ git diff --check
   review.
 - If `#335` merges or receives no objection after a reasonable wait, this local
   branch is ready to push and open as a second, independent installer PR.
+
+---
+
+## H2 #4321 - SCRIPT tool COLUMNS option placement
+
+### Links
+
+- Issue: https://github.com/h2database/h2database/issues/4321
+- Fork: https://github.com/hansu650/h2database
+- Local workspace: `D:\daima\cursor\opensource\h2-4321`
+- Branch: `fix/script-tool-columns-option`
+- Status: local proof complete; no push or PR opened
+
+### Goal
+
+Fix the H2 `SCRIPT` command-line tool so the `COLUMNS` option is placed before
+`TO`, matching valid SQL syntax:
+
+```text
+SCRIPT SIMPLE COLUMNS TO '...'
+```
+
+Before the patch, the tool generated:
+
+```text
+SCRIPT SIMPLE TO '...' COLUMNS
+```
+
+which fails with a SQL syntax error.
+
+### Screening
+
+- Confirmed issue #4321 is open.
+- Confirmed no assignee and no linked development PR.
+- Searched open PRs for `#4321`, `SCRIPT tool`, `SCRIPT COLUMNS`, `COLUMNS
+  option`, and `options1 options2`; no active PR was found for this issue.
+- Build tools available locally:
+  - Java 21.0.3
+  - `javac` 21.0.3
+  - Maven 3.9.9
+  - Gradle and Ant were not installed.
+
+### Implementation
+
+Modified:
+
+- `h2/src/main/org/h2/tools/Script.java`
+- `h2/src/test/org/h2/test/unit/TestTools.java`
+
+Changes:
+
+- Added `COLUMNS` to the `options1` group used before the script target path.
+- Added a regression check in `TestTools.testScriptRunscript()` that runs
+  `Script.main(..., "-options", "simple", "columns")`.
+- The test also verifies that the generated script includes column names in the
+  `INSERT` statement.
+
+### Validation
+
+Before the source fix, the direct tool reproducer failed:
+
+```text
+java -cp ... org.h2.tools.Script ... -options simple columns
+
+Syntax error in SQL statement "SCRIPT  simple TO './data/test/scriptColumns.sql'  [*]columns"
+```
+
+After the patch:
+
+```text
+.\build.bat compile
+BUILD SUCCESS
+
+java -cp ... org.h2.tools.DeleteDbFiles -dir ./data/test -db scriptColumns -quiet
+java -cp ... org.h2.tools.Shell -url jdbc:h2:./data/test/scriptColumns -user sa -password abc -sql "CREATE TABLE TEST(ID INT PRIMARY KEY, NAME VARCHAR); INSERT INTO TEST VALUES(1, 'Hello')"
+java -cp ... org.h2.tools.Script -url jdbc:h2:./data/test/scriptColumns -user sa -password abc -script ./data/test/scriptColumns.sql -options simple columns
+Get-Content .\data\test\scriptColumns.sql | Select-String -Pattern 'INSERT INTO "PUBLIC"\."TEST"\("ID", "NAME"\)'
+
+INSERT INTO "PUBLIC"."TEST"("ID", "NAME") VALUES(1, 'Hello');
+
+git diff --check
+passed
+```
+
+Notes:
+
+- Running the whole `org.h2.test.unit.TestTools` class locally hit an unrelated
+  SSL certificate validation failure in `testSSL()` before reaching this
+  regression path, so the final verification used the direct `Script` tool path
+  plus `build.bat compile`.
+- The workspace was created from a GitHub source zip because repeated HTTPS
+  `git clone` attempts reset the connection. This is fine for local proof, but
+  a real PR should be pushed from a proper upstream-history clone or by
+  cherry-picking the two-file patch onto one.
+
+### PR Draft
+
+```markdown
+Fixes #4321.
+
+This fixes the SCRIPT tool option placement for `COLUMNS`, so generated SQL uses
+`SCRIPT SIMPLE COLUMNS TO ...` instead of placing `COLUMNS` after the target
+path.
+
+The regression test covers the command-line tool path and verifies that the
+generated script includes column names.
+
+Tests:
+
+```text
+.\build.bat compile
+java -cp ... org.h2.tools.Script ... -options simple columns
+git diff --check
+```
+```
+
+### Next Action
+
+- Keep as local proof for now.
+- If we decide to open the PR, first recreate the branch from a proper clone of
+  `h2database/h2database` or cherry-pick this patch onto a real upstream
+  history branch.
