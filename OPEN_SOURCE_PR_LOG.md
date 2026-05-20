@@ -1552,10 +1552,12 @@ git diff --check
 ### Links
 
 - Issue: https://github.com/h2database/h2database/issues/4321
+- PR: https://github.com/h2database/h2database/pull/4344
 - Fork: https://github.com/hansu650/h2database
 - Local workspace: `D:\daima\cursor\opensource\h2-4321`
+- PR workspace: `D:\daima\cursor\opensource\h2-4321-pr`
 - Branch: `fix/script-tool-columns-option`
-- Status: local proof complete; no push or PR opened
+- Status: PR open
 
 ### Goal
 
@@ -1662,7 +1664,6 @@ git diff --check
 
 ### Next Action
 
-- Keep as local proof for now.
-- If we decide to open the PR, first recreate the branch from a proper clone of
-  `h2database/h2database` or cherry-pick this patch onto a real upstream
-  history branch.
+- Opened PR #4344 from a proper upstream-history clone, after cherry-picking the
+  two-file patch from the local proof workspace.
+- Watch CI/review feedback on https://github.com/h2database/h2database/pull/4344.
