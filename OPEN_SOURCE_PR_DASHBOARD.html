@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open Source PR Dashboard</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --green: #15803d;
+      --green-bg: #dcfce7;
+      --blue: #1d4ed8;
+      --blue-bg: #dbeafe;
+      --red: #b91c1c;
+      --red-bg: #fee2e2;
+      --amber: #a16207;
+      --amber-bg: #fef3c7;
+      --gray: #4b5563;
+      --gray-bg: #f3f4f6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #1d4ed8 58%, #0f766e);
+      color: #fff;
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    h2 {
+      margin: 28px 0 12px;
+      font-size: 22px;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: #dbeafe;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 18px 0 0;
+    }
+
+    .metric {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 6px;
+      color: #e0f2fe;
+      font-size: 13px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .card h3 {
+      margin: 8px 0 6px;
+      font-size: 17px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .merged { color: var(--green); background: var(--green-bg); }
+    .open { color: var(--blue); background: var(--blue-bg); }
+    .closed { color: var(--red); background: var(--red-bg); }
+    .local { color: var(--amber); background: var(--amber-bg); }
+    .stopped { color: var(--gray); background: var(--gray-bg); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 10px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: #374151;
+      background: #f9fafb;
+      font-size: 13px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .repo {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      color: #111827;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 116px 1fr;
+      gap: 14px;
+      align-items: start;
+      border-left: 3px solid #dbeafe;
+      padding-left: 12px;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    footer {
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .summary, .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-item {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Open Source PR Dashboard</h1>
+      <p class="subtitle">Qin Tian / hansu650 的公开仓库贡献记录视图。数据来自 GitHub 查询和 <code>OPEN_SOURCE_PR_LOG.md</code>。</p>
+      <div class="summary">
+        <div class="metric"><strong>2</strong><span>外部开源 PR 已合并</span></div>
+        <div class="metric"><strong>3</strong><span>外部开源 PR 仍 open</span></div>
+        <div class="metric"><strong>8</strong><span>已关闭未合并的练习 PR</span></div>
+        <div class="metric"><strong>4</strong><span>本地 proof / stopped candidates</span></div>
+      </div>
+    </header>
+
+    <section>
+      <h2>最重要的结果</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="badge merged">MERGED</span>
+          <h3><a href="https://github.com/h2database/h2database/pull/4344">H2 Database #4344</a></h3>
+          <p>修复 SCRIPT 工具中 <code>COLUMNS</code> 选项位置错误，并添加 Java 回归测试。Java 11 / Java 17 CI 通过。</p>
+        </article>
+        <article class="card">
+          <span class="badge merged">MERGED</span>
+          <h3><a href="https://github.com/matplotlib/matplotlib/pull/31664">Matplotlib #31664</a></h3>
+          <p>澄清 <code>Line2D.set_markevery</code> 中 float spacing 的文档说明，是第一条成功合并的公开开源 PR。</p>
+        </article>
+        <article class="card">
+          <span class="badge open">OPEN / READY</span>
+          <h3><a href="https://github.com/pypa/installer/pull/335">PyPA installer #335</a></h3>
+          <p>RECORD 路径规范化修复。当前 PR open，所有可见 checks 均为 success，等待 maintainer review。</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>当前需要关注的 Open PR</h2>
+      <div class="panel">
+        <table>
+          <thead>
+            <tr>
+              <th>状态</th>
+              <th>仓库 / PR</th>
+              <th>主题</th>
+              <th>当前判断</th>
+              <th>下一步</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge open">OPEN</span></td>
+              <td><div class="repo">pypa/installer</div><a href="https://github.com/pypa/installer/pull/335">#335</a></td>
+              <td>Normalize RECORD paths when writing</td>
+              <td>Mergeable；Windows / Ubuntu / macOS 多版本 tests、docs、pre-commit 均成功。</td>
+              <td>等待 review。不要催太频繁。</td>
+            </tr>
+            <tr>
+              <td><span class="badge open">OPEN</span></td>
+              <td><div class="repo">pypa/pip-audit</div><a href="https://github.com/pypa/pip-audit/pull/1036">#1036</a></td>
+              <td>Use PIPAPI_PYTHON_LOCATION when fixing dependencies</td>
+              <td>Maintainer approved；CI 仍红，之前判断是 unrelated upstream / coverage gate 问题。</td>
+              <td>保持不动，等 maintainer 或 upstream CI 恢复。</td>
+            </tr>
+            <tr>
+              <td><span class="badge open">OPEN</span></td>
+              <td><div class="repo">pypa/pip-audit</div><a href="https://github.com/pypa/pip-audit/pull/1037">#1037</a></td>
+              <td>Skip editable requirements before hash validation</td>
+              <td>Open；review required；status checks 暂无汇总结果。</td>
+              <td>等待 review / workflow 进一步反馈。</td>
+            </tr>
+            <tr>
+              <td><span class="badge open">OPEN / ABANDONED</span></td>
+              <td><div class="repo">OpenTenBase/OpenTenBase</div><a href="https://github.com/OpenTenBase/OpenTenBase/pull/143">#143</a></td>
+              <td>CustomFunc test case</td>
+              <td>很早之前的 PR，当前策略里已放弃，不继续维护。</td>
+              <td>无需动作。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>外部开源 PR 总览</h2>
+      <div class="panel">
+        <table>
+          <thead>
+            <tr>
+              <th>状态</th>
+              <th>仓库 / PR</th>
+              <th>标题</th>
+              <th>价值 / 经验</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge merged">MERGED</span></td>
+              <td><div class="repo">h2database/h2database</div><a href="https://github.com/h2database/h2database/pull/4344">#4344</a></td>
+              <td>Fix SCRIPT tool COLUMNS option placement</td>
+              <td>Java/database 真实 bug fix + regression test，当前最强简历材料之一。</td>
+            </tr>
+            <tr>
+              <td><span class="badge merged">MERGED</span></td>
+              <td><div class="repo">matplotlib/matplotlib</div><a href="https://github.com/matplotlib/matplotlib/pull/31664">#31664</a></td>
+              <td>docs: clarify markevery float spacing</td>
+              <td>第一次公开仓库 PR 成功合并，跑通标准贡献流程。</td>
+            </tr>
+            <tr>
+              <td><span class="badge open">OPEN</span></td>
+              <td><div class="repo">pypa/installer</div><a href="https://github.com/pypa/installer/pull/335">#335</a></td>
+              <td>Normalize RECORD paths when writing</td>
+              <td>PyPA packaging 生态，checks 全绿，等待 review。</td>
+            </tr>
+            <tr>
+              <td><span class="badge open">OPEN</span></td>
+              <td><div class="repo">pypa/pip-audit</div><a href="https://github.com/pypa/pip-audit/pull/1036">#1036</a></td>
+              <td>Use PIPAPI_PYTHON_LOCATION when fixing dependencies</td>
+              <td>已 approved，但 CI 被 unrelated failure 卡住。</td>
+            </tr>
+            <tr>
+              <td><span class="badge open">OPEN</span></td>
+              <td><div class="repo">pypa/pip-audit</div><a href="https://github.com/pypa/pip-audit/pull/1037">#1037</a></td>
+              <td>Skip editable requirements before hash validation</td>
+              <td>真实 bug fix + regression test，等待 review/checks。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">scipy/scipy</div><a href="https://github.com/scipy/scipy/pull/25135">#25135</a></td>
+              <td>DOC: add example for signal.sos2zpk</td>
+              <td>因 PR template / AI disclosure 问题被关闭；形成流程纪律。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">mwaskom/seaborn</div><a href="https://github.com/mwaskom/seaborn/pull/3940">#3940</a></td>
+              <td>BUG: allow defaultdict palettes for missing hue levels</td>
+              <td>行为方向未被维护者接受，学到先确认语义偏好。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">pydata/xarray</div><a href="https://github.com/pydata/xarray/pull/11339">#11339</a></td>
+              <td>BUG: fix scipy backend pickling after multiple opens</td>
+              <td>CI / Mypy / backend 复杂度偏高，后续避免类似重仓库。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">ipython/ipython</div><a href="https://github.com/ipython/ipython/pull/15212">#15212</a></td>
+              <td>DOC: clarify term_title_format help text</td>
+              <td>downstream macOS pyflyby failure + fork 删除导致关闭。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">tkem/cachetools</div><a href="https://github.com/tkem/cachetools/pull/397">#397</a></td>
+              <td>Fix FIFOCache update order</td>
+              <td>维护者不接受该行为方向。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">marshmallow-code/marshmallow</div><a href="https://github.com/marshmallow-code/marshmallow/pull/2967">#2967</a></td>
+              <td>Fix get_value default for missing int keys</td>
+              <td>需求边界与项目预期不一致。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">pre-commit/pre-commit</div><a href="https://github.com/pre-commit/pre-commit/pull/3690">#3690</a></td>
+              <td>Fix config path handling across Windows drives</td>
+              <td>维护者风格 / AI policy 风险高，后续避免。</td>
+            </tr>
+            <tr>
+              <td><span class="badge closed">CLOSED</span></td>
+              <td><div class="repo">sphinx-doc/sphinx</div><a href="https://github.com/sphinx-doc/sphinx/pull/14433">#14433</a></td>
+              <td>Improve root document exclude pattern error</td>
+              <td>typing / CI 失败，说明 Sphinx 这类重项目要更谨慎。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Local Proof / 放弃候选</h2>
+      <div class="panel timeline">
+        <div class="timeline-item">
+          <div class="date">local proof</div>
+          <div><strong>installer #193</strong> - build tag `.data` directory，本地 proof 完成；因为 installer #335 还 open，暂不继续堆同仓库 PR。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="date">stopped</div>
+          <div><strong>pyproject-hooks #226</strong> - maintainer prefers documentation for now，放弃 ContextVar code PR。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="date">stopped</div>
+          <div><strong>pipx #1444</strong> - current main 无法复现，停止。</div>
+        </div>
+        <div class="timeline-item">
+          <div class="date">rejected</div>
+          <div><strong>markdown-it-py #376</strong> - 维护者指向 upstream markdown-it，未做 PR。</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>简历可用表述</h2>
+      <div class="panel">
+        <p><strong>H2 Database Engine:</strong></p>
+        <p class="note">Contributed to H2 Database Engine by fixing SCRIPT tool option placement for the COLUMNS option and adding regression coverage for generated SCRIPT syntax.</p>
+        <p><strong>Matplotlib:</strong></p>
+        <p class="note">Contributed to Matplotlib by clarifying the Line2D.set_markevery docstring for float marker spacing behavior.</p>
+      </div>
+    </section>
+
+    <footer>
+      Last updated: 2026-05-21. Keep this page as a readable companion to OPEN_SOURCE_PR_LOG.md.
+    </footer>
+  </main>
+</body>
+</html>
