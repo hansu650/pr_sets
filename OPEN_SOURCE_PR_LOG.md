@@ -1557,7 +1557,10 @@ git diff --check
 - Local workspace: `D:\daima\cursor\opensource\h2-4321`
 - PR workspace: `D:\daima\cursor\opensource\h2-4321-pr`
 - Branch: `fix/script-tool-columns-option`
-- Status: PR open
+- Status: Merged
+- Merge commit: `8bccaf4899b6aaa869768cf16111459b49a41961`
+- Merged by: `andreitokar`
+- Merged at: 2026-05-21 06:13:44 +08:00
 
 ### Goal
 
@@ -1630,6 +1633,13 @@ git diff --check
 passed
 ```
 
+GitHub CI on the PR passed:
+
+```text
+CI / Java 11: SUCCESS
+CI / Java 17: SUCCESS
+```
+
 Notes:
 
 - Running the whole `org.h2.test.unit.TestTools` class locally hit an unrelated
@@ -1664,6 +1674,13 @@ git diff --check
 
 ### Next Action
 
-- Opened PR #4344 from a proper upstream-history clone, after cherry-picking the
-  two-file patch from the local proof workspace.
-- Watch CI/review feedback on https://github.com/h2database/h2database/pull/4344.
+- Merged into `h2database/h2database`.
+- This is a successful Java/database open-source PR and can be used as a resume
+  item.
+
+### Resume Note
+
+```text
+Contributed to H2 Database Engine by fixing SCRIPT tool option placement for
+the COLUMNS option and adding regression coverage for generated SCRIPT syntax.
+```
