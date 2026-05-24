@@ -15,6 +15,21 @@ features, hardware work, or fragile local setup.
   before editing or declaring completion.
 - Close subagents when their task is done or no longer relevant.
 
+## Subagent Lifecycle
+
+- Use subagents to speed up bounded work, not to create unmanaged background
+  threads.
+- Every spawned subagent must have a narrow task, such as issue research,
+  duplicate PR search, environment inspection, validation review, or final diff
+  review.
+- When a subagent reports completion, becomes stale, or no longer affects the
+  active goal, close it immediately.
+- Before a final response, check whether any subagents from the current task are
+  still open. Close unused or completed subagents before declaring the task
+  finished.
+- Do not leave old subagents hanging across goals. A new PR target starts with a
+  clean subagent slate unless there is an explicit reason to keep one alive.
+
 ## Preferred PR Shape
 
 - Prefer documentation, docstring examples, small tests, or very small bug fixes.
